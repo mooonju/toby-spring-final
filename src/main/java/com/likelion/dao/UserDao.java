@@ -13,16 +13,20 @@ public class UserDao {
         this.connectionMaker = connectionMaker;
     }
 
-    public void add() {
+    public UserDao() {
+
+    }
+
+    public void add(User user) {
         Map<String, String> env = System.getenv();
 
         try {
             Connection c = connectionMaker.makeConnection();
             PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) " +
                     "values(?, ?, ?)");
-            ps.setString(1, "01");
-            ps.setString(2, "AAA");
-            ps.setString(3, "password");
+            ps.setString(1, user.getId());
+            ps.setString(2, user.getName());
+            ps.setString(3, user.getPassword());
 
             ps.executeUpdate();
 
@@ -51,6 +55,12 @@ public class UserDao {
         c.close();
 
         return user;
+    }
+
+    public static void main(String[] args) throws SQLException, ClassNotFoundException {
+        UserDao ud = new UserDao();
+        ud.add(new User("4", "AAA", "1111"));
+        ud.findById("4");
     }
 
 }
