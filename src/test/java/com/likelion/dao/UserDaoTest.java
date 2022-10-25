@@ -45,7 +45,7 @@ class UserDaoTest {
         userDao.deleteAll();
         assertEquals(0, userDao.getCount());
 
-        String id = "11";
+        String id = "10";
         userDao.add(user1);
         assertEquals(1, userDao.getCount());
         User user = userDao.findById(user1.getId());
