@@ -3,32 +3,29 @@ package com.likelion.dao;
 import com.likelion.domain.User;
 import org.springframework.dao.EmptyResultDataAccessException;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.Map;
 
 public class UserDao {
 
-    private ConnectionMaker cm;
+    private DataSource dataSource;
 
-    public UserDao(ConnectionMaker connectionMaker) {
-        this.cm = connectionMaker;
+    public UserDao(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
-    public UserDao() {
-
-    }
-
-    public void jdbcContextWithStatementStrategy(StatementStrategy st) {
+    public void jdbcContextWithStatementStrategy(StatementStrategy st) throws SQLException {
         Connection c = null;
         PreparedStatement ps = null;
 
         try {
-            c = cm.makeConnection();
+            c = dataSource.getConnection();
             ps = st.makePreparedStatement(c);
 
             ps.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw e;
         } finally {
             if (ps != null) {
                 try {
@@ -55,7 +52,7 @@ public class UserDao {
         PreparedStatement ps = null;
 
         try {
-            c = cm.makeConnection();
+            c = dataSource.getConnection();
             ps = c.prepareStatement("select count(*) from users");
             rs = ps.executeQuery();
 
@@ -63,7 +60,7 @@ public class UserDao {
 
             return rs.getInt(1);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw e;
         } finally {
             if (rs != null) {
                 try {
@@ -86,9 +83,9 @@ public class UserDao {
         }
     }
 
-    public void add(User user) {
-        StatementStrategy st = new AddStrategy(user);
-        jdbcContextWithStatementStrategy(st);
+    public void add(User user) throws SQLException {
+        AddStrategy addStrategy = new AddStrategy(user);
+        jdbcContextWithStatementStrategy(addStrategy);
     }
 
     public User findById(String id) throws ClassNotFoundException, SQLException {
@@ -96,7 +93,7 @@ public class UserDao {
 
 
         try {
-            Connection c = cm.makeConnection();
+            Connection c = dataSource.getConnection();
 
             PreparedStatement ps = c.prepareStatement("select * from users where id = ?");
 
