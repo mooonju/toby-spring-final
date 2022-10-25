@@ -8,10 +8,10 @@ import java.util.Map;
 
 public class UserDao {
 
-    private ConnectionMaker connectionMaker;
+    private ConnectionMaker cm;
 
     public UserDao(ConnectionMaker connectionMaker) {
-        this.connectionMaker = connectionMaker;
+        this.cm = connectionMaker;
     }
 
     public UserDao() {
@@ -19,29 +19,72 @@ public class UserDao {
     }
 
     public void deleteAll() throws SQLException, ClassNotFoundException {
-        Connection c = connectionMaker.makeConnection();
-        PreparedStatement ps = c.prepareStatement("delete from users");
-        ps.executeUpdate();
+        Connection c = null;
+        PreparedStatement ps = null;
 
-        ps.close();
-        c.close();
+        try {
+            c = cm.makeConnection();
+            ps = c.prepareStatement("delete from users");
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                }
+            }
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (SQLException e) {
+                }
+            }
+        }
     }
 
-    public int getCount() throws SQLException, ClassNotFoundException {
-        Connection c = connectionMaker.makeConnection();
-        PreparedStatement ps = c.prepareStatement("select count(*) from users");
-        ResultSet rs = ps.executeQuery();
+    public int getCount() throws SQLException {
+        ResultSet rs = null;
+        Connection c = null;
+        PreparedStatement ps = null;
 
-        rs.next();
-        int count = rs.getInt(1);
-        return count;
+        try {
+            c = cm.makeConnection();
+            ps = c.prepareStatement("select count(*) from users");
+            rs = ps.executeQuery();
+
+            rs.next();
+
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                }
+            }
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                }
+            }
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (SQLException e) {
+                }
+            }
+        }
     }
 
     public void add(User user) {
         Map<String, String> env = System.getenv();
-
         try {
-            Connection c = connectionMaker.makeConnection();
+            Connection c = cm.makeConnection();
             PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) " +
                     "values(?, ?, ?)");
             ps.setString(1, user.getId());
@@ -52,7 +95,7 @@ public class UserDao {
 
             ps.close();
             c.close();
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
@@ -62,7 +105,7 @@ public class UserDao {
 
 
         try {
-            Connection c = connectionMaker.makeConnection();
+            Connection c = cm.makeConnection();
 
             PreparedStatement ps = c.prepareStatement("select * from users where id = ?");
 
