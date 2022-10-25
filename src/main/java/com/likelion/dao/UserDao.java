@@ -18,13 +18,40 @@ public class UserDao {
 
     }
 
+    public void jdbcContextWithStatementStrategy(StatementStrategy st) {
+        Connection c = null;
+        PreparedStatement ps = null;
+
+        try {
+            c = cm.makeConnection();
+            ps = st.makePreparedStatement(c);
+
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                }
+            }
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (SQLException e) {
+                }
+            }
+        }
+    }
+
     public void deleteAll() throws SQLException, ClassNotFoundException {
         Connection c = null;
         PreparedStatement ps = null;
 
         try {
             c = cm.makeConnection();
-            ps = c.prepareStatement("delete from users");
+            ps = new DeleteAllStrategy().makePreparedStatement(c);
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -82,22 +109,8 @@ public class UserDao {
     }
 
     public void add(User user) {
-        Map<String, String> env = System.getenv();
-        try {
-            Connection c = cm.makeConnection();
-            PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) " +
-                    "values(?, ?, ?)");
-            ps.setString(1, user.getId());
-            ps.setString(2, user.getName());
-            ps.setString(3, user.getPassword());
-
-            ps.executeUpdate();
-
-            ps.close();
-            c.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        StatementStrategy st = new AddStrategy(user);
+        jdbcContextWithStatementStrategy(st);
     }
 
     public User findById(String id) throws ClassNotFoundException, SQLException {
