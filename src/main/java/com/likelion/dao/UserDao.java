@@ -6,34 +6,37 @@ import java.sql.*;
 import java.util.Map;
 
 public class UserDao {
-    public void add() throws ClassNotFoundException, SQLException {
+
+    private ConnectionMaker connectionMaker;
+
+    public UserDao(ConnectionMaker connectionMaker) {
+        this.connectionMaker = connectionMaker;
+    }
+
+    public void add() {
         Map<String, String> env = System.getenv();
-        String dbHost = env.get("DB_HOST");
-        String dbUser = env.get("DB_USER");
-        String dbPassword = env.get("DB_PASSWORD");
 
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        Connection c = DriverManager.getConnection(dbHost, dbUser, dbPassword);
-        PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) " +
-                "values(?, ?, ?)");
-        ps.setString(1, "01");
-        ps.setString(2, "AAA");
-        ps.setString(3, "password");
+        try {
+            Connection c = connectionMaker.makeConnection();
+            PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) " +
+                    "values(?, ?, ?)");
+            ps.setString(1, "01");
+            ps.setString(2, "AAA");
+            ps.setString(3, "password");
 
-        ps.executeUpdate();
+            ps.executeUpdate();
 
-        ps.close();
-        c.close();
+            ps.close();
+            c.close();
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public User findById(String id) throws ClassNotFoundException, SQLException {
         Map<String, String> env = System.getenv();
-        String dbHost = env.get("DB_HOST");
-        String dbUser = env.get("DB_USER");
-        String dbPassword = env.get("DB_PASSWORD");
 
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        Connection c = DriverManager.getConnection(dbHost, dbUser, dbPassword);
+        Connection c = connectionMaker.makeConnection();
         PreparedStatement ps = c.prepareStatement("select * from users where id = ?");
 
         ps.setString(1, id);
@@ -50,8 +53,4 @@ public class UserDao {
         return user;
     }
 
-    public static void main(String[] args) throws SQLException, ClassNotFoundException {
-        UserDao dao = new UserDao();
-        dao.add();
-    }
 }
