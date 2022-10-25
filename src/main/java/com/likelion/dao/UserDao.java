@@ -17,6 +17,25 @@ public class UserDao {
 
     }
 
+    public void deleteAll() throws SQLException, ClassNotFoundException {
+        Connection c = connectionMaker.makeConnection();
+        PreparedStatement ps = c.prepareStatement("delete from users");
+        ps.executeUpdate();
+
+        ps.close();
+        c.close();
+    }
+
+    public int getCount() throws SQLException, ClassNotFoundException {
+        Connection c = connectionMaker.makeConnection();
+        PreparedStatement ps = c.prepareStatement("select count(*) from users");
+        ResultSet rs = ps.executeQuery();
+
+        rs.next();
+        int count = rs.getInt(1);
+        return count;
+    }
+
     public void add(User user) {
         Map<String, String> env = System.getenv();
 
@@ -56,11 +75,4 @@ public class UserDao {
 
         return user;
     }
-
-    public static void main(String[] args) throws SQLException, ClassNotFoundException {
-        UserDao ud = new UserDao();
-        ud.add(new User("4", "AAA", "1111"));
-        ud.findById("4");
-    }
-
 }
