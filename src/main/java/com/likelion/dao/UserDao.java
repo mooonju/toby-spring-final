@@ -60,23 +60,26 @@ public class UserDao {
     public User findById(String id) throws ClassNotFoundException, SQLException {
         Map<String, String> env = System.getenv();
 
-        User user = null;
+
         try {
             Connection c = connectionMaker.makeConnection();
+
             PreparedStatement ps = c.prepareStatement("select * from users where id = ?");
 
             ps.setString(1, id);
 
             ResultSet rs = ps.executeQuery();
-            rs.next();
-            user = new User(rs.getString("id"),
-                    rs.getString("name"), rs.getString("password"));
+            User user = null;
+            if (rs.next()) {
+                user = new User(rs.getString("id"),
+                        rs.getString("name"), rs.getString("password"));
+            }
 
             rs.close();
             ps.close();
             c.close();
 
-            if (user == null) throw new EmptyResultDataAccessException(1);
+            if (user == null) { throw new EmptyResultDataAccessException(1); }
 
             return user;
 
