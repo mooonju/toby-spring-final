@@ -1,6 +1,6 @@
-package com.likelion.domain;
+package com.likelion.dao;
 
-import com.likelion.dao.User;
+import com.likelion.domain.User;
 
 import java.sql.*;
 import java.util.Map;
